@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HW | The Talent Scout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bgBase: '#020617',
+                        panelDark: '#0F172A',
+                        accentYellow: '#FACC15',
+                        accentCyan: '#22D3EE',
+                        accentRed: '#F43F5E',
+                        textMain: '#F8FAFC',
+                        textMuted: '#94A3B8'
+                    },
+                    fontFamily: {
+                        epic: ['"Space Grotesk"', 'sans-serif'],
+                        ui: ['"Inter"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #000; color: #F8FAFC; display: flex; justify-content: center; font-family: 'Inter', sans-serif; overflow: hidden; margin: 0; height: 100dvh; width: 100vw; }
+        
+        #app-container { width: 100%; max-width: 430px; height: 100%; display: flex; flex-direction: column; background: #020617; position: relative; }
+        @media (min-width: 640px) {
+            #app-container { border-left: 1px solid #1E293B; border-right: 1px solid #1E293B; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        }
+        
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+        .screen.active { display: flex; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.4s; }
+        
+        .glass-btn { background: #0F172A; border: 1px solid #1E293B; color: #F8FAFC; transition: all 0.2s; position: relative; overflow: hidden; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .glass-btn:active { transform: scale(0.97); border-color: #FACC15; }
+        
+        .glow-yellow { text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); }
+        .glow-red { text-shadow: 0 0 15px rgba(244, 63, 94, 0.6); }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        
+        <!-- Top Bar -->
+        <header class="h-16 w-full flex items-center justify-between px-6 bg-[#020617] border-b border-[#1E293B] shrink-0 z-20 shadow-md">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-user-ninja text-accentYellow text-xs"></i>
+                <span class="text-[10px] font-bold text-accentYellow tracking-[0.3em] uppercase font-ui">SCOUT_APP</span>
+            </div>
+            <div class="flex gap-2" id="hearts-container">
+                <i class="fa-solid fa-shield-halved text-accentRed text-lg transition-all" id="h1"></i>
+                <i class="fa-solid fa-shield-halved text-accentRed text-lg transition-all" id="h2"></i>
+                <i class="fa-solid fa-shield-halved text-accentRed text-lg transition-all" id="h3"></i>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="w-full h-1.5 bg-[#0F172A] shrink-0 z-20">
+            <div id="progress-bar" class="h-full bg-accentYellow transition-all duration-300 shadow-[0_0_8px_rgba(250,204,21,0.8)]" style="width: 0%"></div>
+        </div>
+
+        <main class="flex-1 w-full overflow-hidden flex flex-col relative" id="screens-container">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15rem] text-white opacity-[0.02] pointer-events-none z-0">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        const questions = [
+            { q: "He [BLANK] hack the security camera.", opts: ['can', 'cans', 'can to'], ans: "can" },
+            { q: "I [BLANK] speak Russian. I only speak English.", opts: ['don\'t can', 'can\'t', 'doesn\'t can'], ans: "can\'t" },
+            { q: "[BLANK] you open this door?", opts: ['Do', 'Are', 'Can'], ans: "Can" },
+            { q: "They [BLANK] swim very fast.", opts: ['can', 'can to', 'are can'], ans: "can" },
+            { q: "She [BLANK] fix the computer. It is broken.", opts: ['can', 'can\'t', 'isn\'t'], ans: "can\'t" },
+            { q: "My brother [BLANK] cook Italian food perfectly.", opts: ['cans', 'can', 'can to'], ans: "can" },
+            { q: "We need a getaway driver. [BLANK] you drive?", opts: ['Can', 'Are', 'Do'], ans: "Can" },
+            { q: "I [BLANK] see the guard from here. It is safe.", opts: ['can', 'am', 'do'], ans: "can" },
+            { q: "The alarm is on. We [BLANK] enter now.", opts: ['aren\'t', 'don\'t', 'can\'t'], ans: "can\'t" },
+            { q: "[BLANK] she solve the math problem?", opts: ['Can', 'Does', 'Is'], ans: "Can" },
+            { q: "Agents [BLANK] disguise themselves easily.", opts: ['can to', 'cans', 'can'], ans: "can" },
+            { q: "He [BLANK] run fast because his leg is hurt.", opts: ['doesn\'t', 'can\'t', 'isn\'t'], ans: "can\'t" },
+            { q: "We [BLANK] park the car here. It is illegal.", opts: ['can\'t', 'don\'t', 'aren\'t'], ans: "can\'t" },
+            { q: "[BLANK] I use your phone, please?", opts: ['Do', 'Am', 'Can'], ans: "Can" },
+            { q: "They are smart. They [BLANK] escape the room.", opts: ['are', 'can', 'do'], ans: "can" }
+        ];
+
+        let currentQ = 0;
+        let lives = 3;
+        const totalQ = questions.length;
+
+        function renderScreen() {
+            const container = document.getElementById('screens-container');
+            const bgWatermark = `<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15rem] text-white opacity-[0.02] pointer-events-none z-0"><i class="fa-solid fa-fingerprint"></i></div>`;
+
+            if (currentQ >= totalQ) { showResults(container, bgWatermark); return; }
+
+            document.getElementById('progress-bar').style.width = `${(currentQ / totalQ) * 100}%`;
+
+            const q = questions[currentQ];
+            const parts = q.q.split("[BLANK]");
+
+            let html = bgWatermark + `
+                <div class="screen active w-full h-full flex flex-col justify-between p-8 relative z-10">
+                    <div class="text-center relative z-10 flex-1 flex flex-col justify-center -mt-8">
+                        <span class="text-xs text-textMuted font-bold font-ui tracking-[0.3em] uppercase mb-6 inline-block opacity-70">Query ${currentQ + 1} / ${totalQ}</span>
+                        <h2 class="text-3xl md:text-4xl font-epic leading-snug text-textMain px-2 drop-shadow-md">
+                            ${parts[0]}<br><span id="blank-space" class="border-b-[3px] border-dashed border-[#555] text-transparent px-6 mx-1 transition-all inline-block mt-2">_____</span><br>${parts[1]}
+                        </h2>
+                    </div>
+                    <div class="space-y-4 w-full shrink-0 relative z-10 pb-4" id="opts-container">
+                        ${q.opts.map((opt) => `
+                            <button class="w-full py-5 glass-btn rounded-2xl font-epic font-bold text-xl tracking-[0.1em] uppercase flex items-center justify-center" onclick="checkAnswer(this, '${opt}', '${q.ans}')">
+                                <span>${opt}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function checkAnswer(btn, selected, correct) {
+            const blank = document.getElementById('blank-space');
+            const container = document.getElementById('opts-container');
+            Array.from(container.children).forEach(b => b.style.pointerEvents = 'none');
+            
+            blank.innerText = selected;
+            blank.classList.remove('text-transparent', 'border-dashed', 'border-[#555]');
+
+            if (selected === correct) {
+                blank.className = "text-[#020617] bg-accentYellow font-bold px-4 mx-1 rounded inline-block mt-2 shadow-[0_0_15px_rgba(250,204,21,0.4)]";
+                btn.style.backgroundColor = '#FACC15'; btn.style.borderColor = '#FACC15'; btn.style.color = '#020617'; btn.classList.add('glow-yellow');
+                setTimeout(() => { currentQ++; renderScreen(); }, 800);
+            } else {
+                blank.className = "text-white bg-accentRed font-bold px-4 mx-1 rounded inline-block mt-2 shadow-[0_0_15px_rgba(244,63,94,0.4)]";
+                btn.style.backgroundColor = '#F43F5E'; btn.style.borderColor = '#F43F5E'; btn.style.color = '#FFFFFF';
+                const screen = document.querySelector('.screen.active'); screen.classList.add('shake');
+                loseLife();
+                setTimeout(() => { screen.classList.remove('shake'); }, 500);
+                setTimeout(() => { currentQ++; renderScreen(); }, 1200);
+            }
+        }
+
+        function loseLife() {
+            lives--;
+            const brokenHeart = document.getElementById(`h${lives + 1}`);
+            if(brokenHeart) { brokenHeart.style.opacity = '0.2'; brokenHeart.classList.remove('text-accentRed'); brokenHeart.classList.add('text-[#333]'); }
+            if (lives <= 0) setTimeout(showGameOver, 600);
+        }
+
+        function showGameOver() {
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-bar').style.backgroundColor = '#F43F5E';
+            document.getElementById('progress-bar').classList.remove('bg-accentYellow');
+            
+            const container = document.getElementById('screens-container');
+            container.innerHTML = `
+                <div class="w-full h-full flex flex-col justify-center items-center text-center bg-[#020617] p-8 relative z-10">
+                    <div class="w-32 h-32 bg-[#0F172A] border-4 border-accentRed rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(244,63,94,0.4)]">
+                        <i class="fa-solid fa-lock text-6xl text-accentRed animate-pulse glow-red"></i>
+                    </div>
+                    <h2 class="text-4xl font-epic font-black text-textMain mb-3 uppercase tracking-widest glow-red">SYSTEM LOCKED</h2>
+                    <p class="text-textMuted mb-12 font-ui tracking-widest text-sm uppercase font-bold">Too many syntax errors.</p>
+                    <button class="w-full py-5 bg-accentRed text-white rounded-2xl font-epic font-bold tracking-widest text-xl shadow-[0_0_20px_rgba(244,63,94,0.4)] uppercase active:scale-95 transition-transform" onclick="location.reload()">REBOOT TERMINAL</button>
+                </div>
+            `;
+        }
+
+        function showResults(container, bgWatermark) {
+            document.getElementById('progress-bar').style.width = '100%';
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#FACC15', '#22D3EE', '#FFFFFF']});
+            const score = Math.round(( (totalQ - (3 - lives)) / totalQ ) * 100); 
+            
+            container.innerHTML = bgWatermark + `
+                <div class="w-full h-full flex flex-col justify-center items-center text-center p-8 relative z-10">
+                    <div class="w-32 h-32 bg-[#0F172A] border-4 border-accentYellow rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(250,204,21,0.4)]">
+                        <i class="fa-solid fa-user-ninja text-6xl text-accentYellow glow-yellow"></i>
+                    </div>
+                    <h2 class="text-4xl font-epic font-black text-textMain mb-3 uppercase tracking-widest glow-yellow">DATA SECURED</h2>
+                    <p class="text-textMuted mb-6 font-ui tracking-widest text-sm uppercase font-bold">Syntax verified.</p>
+                    <div class="text-7xl font-black font-epic text-accentYellow mb-16 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]">
+                        ${score}%
+                    </div>
+                    <button class="w-full py-5 bg-transparent border-2 border-accentYellow text-accentYellow rounded-2xl font-epic font-bold tracking-widest text-xl active:bg-accentYellow active:text-[#020617] transition-all uppercase glow-yellow" onclick="location.reload()">NEW MISSION</button>
+                </div>
+            `;
+        }
+
+        renderScreen();
+    </script>
+</body>
+</html>
